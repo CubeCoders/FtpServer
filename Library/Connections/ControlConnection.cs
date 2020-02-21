@@ -11,7 +11,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Zhaobang.FtpServer.Connections;
 using Zhaobang.FtpServer.Exceptions;
 using Zhaobang.FtpServer.File;
 
@@ -36,6 +35,9 @@ namespace Zhaobang.FtpServer.Connections
         /// <see cref="LocalDataConnection.IsOpen"/> before usage.
         /// </summary>
         private readonly IDataConnection dataConnection;
+        private readonly byte[] readByteBuffer = new byte[ReadByteBufferLength];
+        private readonly char[] readCharBuffer = new char[ReadCharBufferLength];
+        private readonly ListFormat listFormat = ListFormat.Unix;
 
         private Stream stream;
 
@@ -43,8 +45,6 @@ namespace Zhaobang.FtpServer.Connections
         private string userName = string.Empty;
         private bool authenticated;
 
-        private byte[] readByteBuffer = new byte[ReadByteBufferLength];
-        private char[] readCharBuffer = new char[ReadCharBufferLength];
         private int readOffset = 0;
 
         private DataConnectionMode dataConnectionMode = DataConnectionMode.Active;
@@ -67,8 +67,6 @@ namespace Zhaobang.FtpServer.Connections
         /// This is ignored.
         /// </summary>
         private DataType dataType = DataType.ASCII;
-
-        private ListFormat listFormat = ListFormat.Unix;
 
         private bool useSecureDataConnection = false;
 
@@ -159,6 +157,7 @@ namespace Zhaobang.FtpServer.Connections
         /// </summary>
         public void Dispose()
         {
+            stream?.Dispose();
             tcpClient.Dispose();
             dataConnection.Close();
         }
@@ -296,7 +295,7 @@ namespace Zhaobang.FtpServer.Connections
                     await ReplyAsync(FtpReplyCode.NeedPassword, "Please input password");
                     return;
                 case "PASS":
-                    if (authenticated = server.Authenticator.Authenticate(userName, parameter))
+                    if (authenticated = server.Authenticator.Authenticate(userName, parameter, remoteEndPoint))
                     {
                         await ReplyAsync(FtpReplyCode.UserLoggedIn, "Logged in");
                         fileProvider = server.FileManager.GetProvider(userName);
@@ -450,72 +449,76 @@ namespace Zhaobang.FtpServer.Connections
                 return;
             }
             MemoryStream stream = new MemoryStream();
-            var writer = new StreamWriter(stream, encoding);
-            writer.NewLine = "\r\n";
-            try
+            using (var writer = new StreamWriter(stream, encoding)
             {
-                var listing = await fileProvider.GetListingAsync(parameter);
-                await writer.WriteLineAsync();
-                foreach (var item in listing)
+                NewLine = "\r\n",
+            })
+            {
+                try
                 {
-                    if (listFormat == ListFormat.Unix)
+                    var listing = await fileProvider.GetListingAsync(parameter);
+                    await writer.WriteLineAsync();
+                    foreach (var item in listing)
                     {
-                        await writer.WriteLineAsync(
-                            string.Format(
-                                "{0}{1}{1}{1}   1 owner   group {2,15} {3} {4}",
-                                item.IsDirectory ? 'd' : '-',
-                                item.IsReadOnly ? "r-x" : "rwx",
-                                item.Length,
-                                item.LastWriteTime.ToString(
-                                    item.LastWriteTime.Year == DateTime.Now.Year ?
-                                    "MMM dd HH:mm" : "MMM dd  yyyy", CultureInfo.InvariantCulture),
-                                item.Name));
-                    }
-                    else if (listFormat == ListFormat.MsDos)
-                    {
-                        if (item.IsDirectory)
+                        if (listFormat == ListFormat.Unix)
                         {
                             await writer.WriteLineAsync(
                                 string.Format(
-                                    CultureInfo.InvariantCulture,
-                                    "{0:MM-dd-yy  hh:mmtt} {1,20} {2}",
-                                    item.LastWriteTime,
+                                    "{0}{1}{1}{1}   1 owner   group {2,15} {3} {4}",
+                                    item.IsDirectory ? 'd' : '-',
+                                    item.IsReadOnly ? "r-x" : "rwx",
                                     item.Length,
+                                    item.LastWriteTime.ToString(
+                                        item.LastWriteTime.Year == DateTime.Now.Year ?
+                                        "MMM dd HH:mm" : "MMM dd  yyyy", CultureInfo.InvariantCulture),
                                     item.Name));
+                        }
+                        else if (listFormat == ListFormat.MsDos)
+                        {
+                            if (item.IsDirectory)
+                            {
+                                await writer.WriteLineAsync(
+                                    string.Format(
+                                        CultureInfo.InvariantCulture,
+                                        "{0:MM-dd-yy  hh:mmtt} {1,20} {2}",
+                                        item.LastWriteTime,
+                                        item.Length,
+                                        item.Name));
+                            }
+                            else
+                            {
+                                await writer.WriteLineAsync(
+                                    string.Format(
+                                        CultureInfo.InvariantCulture,
+                                        "{0:MM-dd-yy  hh:mmtt}       {1,-14} {2}",
+                                        item.LastWriteTime,
+                                        "<DIR>",
+                                        item.Name));
+                            }
                         }
                         else
                         {
-                            await writer.WriteLineAsync(
-                                string.Format(
-                                    CultureInfo.InvariantCulture,
-                                    "{0:MM-dd-yy  hh:mmtt}       {1,-14} {2}",
-                                    item.LastWriteTime,
-                                    "<DIR>",
-                                    item.Name));
+                            throw new NotSupportedException("Can't only use Unix or MS-DOS listing format.");
                         }
                     }
-                    else
-                    {
-                        throw new NotSupportedException("Can't only use Unix or MS-DOS listing format.");
-                    }
                 }
+                catch (FileBusyException ex)
+                {
+                    await ReplyAsync(FtpReplyCode.FileBusy, string.Format("File temporarily unavailable: {0}", ex.Message));
+                    return;
+                }
+                catch (FileNoAccessException ex)
+                {
+                    await ReplyAsync(FtpReplyCode.FileNoAccess, string.Format("File access denied: {0}", ex.Message));
+                    return;
+                }
+                writer.Flush();
+                stream.Seek(0, SeekOrigin.Begin);
+                await OpenDataConnectionAsync();
+                await dataConnection.SendAsync(stream);
+                await dataConnection.DisconnectAsync();
+                await ReplyAsync(FtpReplyCode.SuccessClosingDataConnection, "Listing has been sent");
             }
-            catch (FileBusyException ex)
-            {
-                await ReplyAsync(FtpReplyCode.FileBusy, string.Format("File temporarily unavailable: {0}", ex.Message));
-                return;
-            }
-            catch (FileNoAccessException ex)
-            {
-                await ReplyAsync(FtpReplyCode.FileNoAccess, string.Format("File access denied: {0}", ex.Message));
-                return;
-            }
-            writer.Flush();
-            stream.Seek(0, SeekOrigin.Begin);
-            await OpenDataConnectionAsync();
-            await dataConnection.SendAsync(stream);
-            await dataConnection.DisconnectAsync();
-            await ReplyAsync(FtpReplyCode.SuccessClosingDataConnection, "Listing has been sent");
             return;
         }
 
@@ -527,27 +530,29 @@ namespace Zhaobang.FtpServer.Connections
                 return;
             }
             MemoryStream stream = new MemoryStream();
-            var writer = new StreamWriter(stream, encoding);
-            writer.NewLine = "\r\n";
-            try
+            using (var writer = new StreamWriter(stream, encoding))
             {
-                var nameListing = await fileProvider.GetNameListingAsync(parameter);
-                foreach (var item in nameListing)
+                writer.NewLine = "\r\n";
+                try
                 {
-                    await writer.WriteLineAsync(item);
+                    var nameListing = await fileProvider.GetNameListingAsync(parameter);
+                    foreach (var item in nameListing)
+                    {
+                        await writer.WriteLineAsync(item);
+                    }
                 }
+                catch (FileBusyException ex)
+                {
+                    await ReplyAsync(FtpReplyCode.FileBusy, string.Format("File temporarily unavailable: {0}", ex.Message));
+                    return;
+                }
+                catch (FileNoAccessException ex)
+                {
+                    await ReplyAsync(FtpReplyCode.FileNoAccess, string.Format("File access denied: {0}", ex.Message));
+                    return;
+                }
+                writer.Flush();
             }
-            catch (FileBusyException ex)
-            {
-                await ReplyAsync(FtpReplyCode.FileBusy, string.Format("File temporarily unavailable: {0}", ex.Message));
-                return;
-            }
-            catch (FileNoAccessException ex)
-            {
-                await ReplyAsync(FtpReplyCode.FileNoAccess, string.Format("File access denied: {0}", ex.Message));
-                return;
-            }
-            writer.Flush();
             stream.Seek(0, SeekOrigin.Begin);
             await OpenDataConnectionAsync();
             await dataConnection.SendAsync(stream);
@@ -715,8 +720,7 @@ namespace Zhaobang.FtpServer.Connections
                 return;
             }
 
-            int remoteProtocal;
-            if (!int.TryParse(paramSegs[1], out remoteProtocal))
+            if (!int.TryParse(paramSegs[1], out int remoteProtocal))
             {
                 await ReplyAsync(
                     FtpReplyCode.SyntaxErrorInParametersOrArguments,
@@ -911,14 +915,8 @@ namespace Zhaobang.FtpServer.Connections
             await stream.WriteAsync(bytesToSend, 0, bytesToSend.Length);
         }
 
-        private string EncodePathName(string path)
-        {
-            return path.Replace("\r", "\r\0");
-        }
+        private string EncodePathName(string path) => path.Replace("\r", "\r\0");
 
-        private string DecodePathName(string path)
-        {
-            return path.Replace("\r\0", "\r\0");
-        }
+        private string DecodePathName(string path) => path.Replace("\r\0", "\r\0");
     }
 }

@@ -3,12 +3,8 @@
 // </copyright>
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Zhaobang.FtpServer.Authenticate;
@@ -29,8 +25,11 @@ namespace Zhaobang.FtpServer
         private readonly IControlConnectionSslFactory controlConnectionSslFactory;
         private readonly FtpTracer tracer = new FtpTracer();
 
-        private IPEndPoint endPoint;
-        private TcpListener tcpListener;
+        private readonly IPEndPoint endPoint;
+        private readonly TcpListener tcpListener;
+
+        public int MinPasvPort { get => LocalDataConnection.MinPort; set => LocalDataConnection.MinPort = value; }
+        public int MaxPasvPort { get => LocalDataConnection.MinPort; set => LocalDataConnection.MaxPort = value; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FtpServer"/> class

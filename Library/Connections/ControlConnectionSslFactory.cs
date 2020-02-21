@@ -3,14 +3,12 @@
 // </copyright>
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 
-#if NETSTANDARD2_1
+#if NETSTANDARD2_1 || NETFRAMEWORK
 namespace Zhaobang.FtpServer.Connections
 {
     /// <summary>
@@ -36,7 +34,11 @@ namespace Zhaobang.FtpServer.Connections
         /// <returns>The task of the async operation.</returns>
         public async Task DisconnectAsync(Stream stream)
         {
+#if NETFRAMEWORK
+            stream.Dispose();
+#else
             await stream.DisposeAsync();
+#endif
         }
 
         /// <summary>

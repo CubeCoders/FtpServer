@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Zhaobang.FtpServer.Connections
@@ -18,8 +17,8 @@ namespace Zhaobang.FtpServer.Connections
     /// </summary>
     public class LocalDataConnection : IDisposable, IDataConnection
     {
-        private const int MinPort = 1024;
-        private const int MaxPort = 65535;
+        internal static int MinPort = 1024;
+        internal static int MaxPort = 65535;
         private static int lastUsedPort = new Random().Next(MinPort, MaxPort);
 
         private readonly IPAddress listeningIP;
@@ -47,10 +46,7 @@ namespace Zhaobang.FtpServer.Connections
         /// <summary>
         /// Gets a value indicating whether a data connection is open.
         /// </summary>
-        public bool IsOpen
-        {
-            get { return TcpClient != null && TcpClient.Connected; }
-        }
+        public bool IsOpen => TcpClient != null && TcpClient.Connected;
 
         /// <summary>
         /// Gets the supported protocal IDs in passive mode (defined in RFC 2824).
@@ -66,7 +62,7 @@ namespace Zhaobang.FtpServer.Connections
                     case AddressFamily.InterNetworkV6:
                         return new[] { 2 };
                     default:
-                        return new int[0];
+                        return Array.Empty<int>();
                 }
             }
         }

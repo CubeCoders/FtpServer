@@ -2,9 +2,7 @@
 // Copyright (c) Zhaoquan Huang. All rights reserved
 // </copyright>
 
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Net;
 
 namespace Zhaobang.FtpServer.Authenticate
 {
@@ -32,10 +30,8 @@ namespace Zhaobang.FtpServer.Authenticate
         /// </summary>
         /// <param name="userName">The user name user inputted.</param>
         /// <param name="password">The password user inputted.</param>
+        /// <param name="remoteEndPoint">The remote endpoint the user connected from.</param>
         /// <returns>Whether the pair is correct.</returns>
-        public bool Authenticate(string userName, string password)
-        {
-            return this.userName == userName && this.password == password;
-        }
+        public bool Authenticate(string userName, string password, IPEndPoint remoteEndPoint) => this.userName == userName && this.password == password;
     }
 }

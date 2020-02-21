@@ -2,10 +2,7 @@
 // Copyright (c) Zhaoquan Huang. All rights reserved
 // </copyright>
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Zhaobang.FtpServer.File
 {
@@ -15,7 +12,7 @@ namespace Zhaobang.FtpServer.File
     /// </summary>
     public class SimpleFileProviderFactory : IFileProviderFactory
     {
-        private string baseDirectory;
+        private readonly string baseDirectory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SimpleFileProviderFactory"/> class.
@@ -36,9 +33,6 @@ namespace Zhaobang.FtpServer.File
         /// </summary>
         /// <param name="user">The name of the user.</param>
         /// <returns>The <see cref="SimpleFileProvider"/> for that user.</returns>
-        public IFileProvider GetProvider(string user)
-        {
-            return new SimpleFileProvider(baseDirectory);
-        }
+        public IFileProvider GetProvider(string user) => new SimpleFileProvider(baseDirectory);
     }
 }

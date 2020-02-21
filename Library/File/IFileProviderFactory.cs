@@ -2,15 +2,11 @@
 // Copyright (c) Zhaoquan Huang. All rights reserved
 // </copyright>
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Zhaobang.FtpServer.File
 {
-     /// <summary>
-     /// Manager that creates <see cref="IFileProvider"/> for each user.
-     /// </summary>
+    /// <summary>
+    /// Manager that creates <see cref="IFileProvider"/> for each user.
+    /// </summary>
     public interface IFileProviderFactory
     {
         /// <summary>

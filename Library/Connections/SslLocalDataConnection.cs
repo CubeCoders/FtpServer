@@ -12,7 +12,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
-#if NETSTANDARD2_1
+#if NETSTANDARD2_1 || NETFRAMEWORK
 namespace Zhaobang.FtpServer.Connections
 {
     /// <summary>
@@ -204,7 +204,11 @@ namespace Zhaobang.FtpServer.Connections
         {
             if (tcpStream is SslStream sslStream)
             {
+#if NET462
+                sslStream.Close();
+#else
                 await sslStream.ShutdownAsync();
+#endif
             }
             TcpClient = null;
         }

@@ -2,11 +2,8 @@
 // Copyright (c) Zhaoquan Huang. All rights reserved
 // </copyright>
 
-using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Security;
-using System.Text;
 using System.Xml.Serialization;
 
 namespace Zhaobang.FtpServer

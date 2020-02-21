@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Zhaobang.FtpServer.File
@@ -46,10 +45,7 @@ namespace Zhaobang.FtpServer.File
         /// Gets the FTP working directory.
         /// </summary>
         /// <returns>The FTP working directory absolute path.</returns>
-        public string GetWorkingDirectory()
-        {
-            return "/" + workingDirectory;
-        }
+        public string GetWorkingDirectory() => "/" + workingDirectory;
 
         /// <summary>
         /// Sets the FTP working directory.

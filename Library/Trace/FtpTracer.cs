@@ -2,11 +2,8 @@
 // Copyright (c) Zhaoquan Huang. All rights reserved
 // </copyright>
 
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Zhaobang.FtpServer.Trace
