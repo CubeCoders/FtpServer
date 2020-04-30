@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -27,9 +28,6 @@ namespace Zhaobang.FtpServer
 
         private readonly IPEndPoint endPoint;
         private readonly TcpListener tcpListener;
-
-        public int MinPasvPort { get => LocalDataConnection.MinPort; set => LocalDataConnection.MinPort = value; }
-        public int MaxPasvPort { get => LocalDataConnection.MinPort; set => LocalDataConnection.MaxPort = value; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FtpServer"/> class
@@ -87,6 +85,21 @@ namespace Zhaobang.FtpServer
             tracer.CommandInvoked += Tracer_CommandInvoked;
             tracer.ReplyInvoked += Tracer_ReplyInvoked;
         }
+
+        /// <summary>
+        /// Gets or sets the lowest port used by PASV mode.
+        /// </summary>
+        public int MinPasvPort { get => LocalDataConnection.MinPort; set => LocalDataConnection.MinPort = value; }
+
+        /// <summary>
+        /// Gets or sets the highest port used by PASV mode.
+        /// </summary>
+        public int MaxPasvPort { get => LocalDataConnection.MinPort; set => LocalDataConnection.MaxPort = value; }
+
+        /// <summary>
+        /// Gets or sets the welcome message shown to clients upon connection.
+        /// </summary>
+        public string WelcomeMessage { get => ControlConnection.WelcomeMessage; set => ControlConnection.WelcomeMessage = value; }
 
         /// <summary>
         /// Gets the instance of <see cref="FtpTracer"/> to trace FTP commands and replies.
@@ -153,14 +166,8 @@ namespace Zhaobang.FtpServer
             }
         }
 
-        private static void Tracer_ReplyInvoked(string replyCode, IPEndPoint remoteAddress)
-        {
-            System.Diagnostics.Debug.WriteLine($"{remoteAddress}, reply, {replyCode}");
-        }
+        private static void Tracer_ReplyInvoked(string replyCode, IPEndPoint remoteAddress) => Debug.WriteLine($"{remoteAddress}, reply, {replyCode}");
 
-        private static void Tracer_CommandInvoked(string command, IPEndPoint remoteAddress)
-        {
-            System.Diagnostics.Debug.WriteLine($"{remoteAddress}, command, {command}");
-        }
+        private static void Tracer_CommandInvoked(string command, IPEndPoint remoteAddress) => Debug.WriteLine($"{remoteAddress}, command, {command}");
     }
 }

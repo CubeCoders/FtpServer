@@ -39,6 +39,8 @@ namespace Zhaobang.FtpServer.Connections
         private readonly char[] readCharBuffer = new char[ReadCharBufferLength];
         private readonly ListFormat listFormat = ListFormat.Unix;
 
+        public static string WelcomeMessage = "FtpServer by Taoyou is now ready";
+
         private Stream stream;
 
         private Encoding encoding = Encoding.UTF8;
@@ -148,7 +150,7 @@ namespace Zhaobang.FtpServer.Connections
             AboutToOpenDataConnection = 150,
             NameSystemType = 215,
             FileActionPendingInfo = 350,
-            NotSupportedProtocal = 522,
+            NotSupportedProtocol = 522,
             ProceedWithNegotiation = 234,
         }
 
@@ -173,7 +175,7 @@ namespace Zhaobang.FtpServer.Connections
             server.Tracer.TraceUserConnection(remoteEndPoint);
             try
             {
-                await ReplyAsync(FtpReplyCode.ServiceReady, "FtpServer by Taoyou is now ready");
+                await ReplyAsync(FtpReplyCode.ServiceReady, WelcomeMessage);
 
                 while (true)
                 {
@@ -269,19 +271,19 @@ namespace Zhaobang.FtpServer.Connections
                             fileProvider.GetWorkingDirectory().Replace("\"", "\"\"")));
                     return;
                 case "SYST":
-                    await ReplyAsync(FtpReplyCode.NameSystemType, "UNIX simulated by .NET Core");
+                    await ReplyAsync(FtpReplyCode.NameSystemType, "UNIX emulation");
                     return;
                 case "FEAT":
                     await ReplyMultilineAsync(FtpReplyCode.SystemStatus, "Supports:\nUTF8");
                     return;
                 case "OPTS":
-                    if (parameter.ToLowerInvariant() == "UTF8 ON")
+                    if (parameter.ToUpperInvariant() == "UTF8 ON")
                     {
                         encoding = Encoding.UTF8;
                         await ReplyAsync(FtpReplyCode.CommandOkay, "UTF-8 is on");
                         return;
                     }
-                    else if (parameter.ToUpper() == "UTF8 OFF")
+                    else if (parameter.ToUpperInvariant() == "UTF8 OFF")
                     {
                         encoding = Encoding.ASCII;
                         await ReplyAsync(FtpReplyCode.CommandOkay, "UTF-8 is off");
@@ -386,6 +388,9 @@ namespace Zhaobang.FtpServer.Connections
                     return;
                 case "PROT":
                     await CommandProtAsync(parameter);
+                    return;
+                case "SITE":
+                    await ReplyAsync(FtpReplyCode.NotImplemented, "SITE command is not supported.");
                     return;
             }
             await ReplyAsync(FtpReplyCode.CommandUnrecognized, "Can't recognize this command.");
@@ -755,7 +760,7 @@ namespace Zhaobang.FtpServer.Connections
             {
                 var supportedProtocalString =
                     string.Join(",", dataConnection.SupportedActiveProtocal.Select(x => x.ToString()));
-                await ReplyAsync(FtpReplyCode.NotSupportedProtocal, $"Protocal not supported, use({supportedProtocalString})");
+                await ReplyAsync(FtpReplyCode.NotSupportedProtocol, $"Protocal not supported, use({supportedProtocalString})");
                 return;
             }
 
@@ -786,7 +791,7 @@ namespace Zhaobang.FtpServer.Connections
             {
                 var supportedProtocalString =
                     string.Join(",", dataConnection.SupportedPassiveProtocal.Select(x => x.ToString()));
-                await ReplyAsync(FtpReplyCode.NotSupportedProtocal, $"Protocal not supported, use({supportedProtocalString})");
+                await ReplyAsync(FtpReplyCode.NotSupportedProtocol, $"Protocal not supported, use({supportedProtocalString})");
                 return;
             }
             dataConnectionMode = DataConnectionMode.ExtendedPassive;
