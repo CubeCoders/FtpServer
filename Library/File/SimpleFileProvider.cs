@@ -307,6 +307,58 @@ namespace Zhaobang.FtpServer.File
             }
         }
 
+        /// <summary>
+        /// Gets the size of the file.
+        /// </summary>
+        /// <param name="path">Absolute or relative FTP path of the file.</param>
+        /// <returns>The files size.</returns>
+        public Task<long> GetFileSize(string path)
+        {
+            try
+            {
+                string localPath = GetLocalPath(path);
+                return Task.FromResult(new FileInfo(localPath).Length);
+            }
+            catch (Exception ex)
+            {
+                if (ex is ArgumentException ||
+                    ex is ArgumentNullException ||
+                    ex is PathTooLongException ||
+                    ex is UnauthorizedAccessException ||
+                    ex is SecurityException ||
+                    ex is DirectoryNotFoundException)
+                    throw new FileNoAccessException(ex.Message, ex);
+                else
+                    throw new FileBusyException(ex.Message, ex);
+            }
+        }
+
+        /// <summary>
+        /// Gets the last modified date of the file.
+        /// </summary>
+        /// <param name="path">Absolute or relative FTP path of the file.</param>
+        /// <returns>The files modification date.</returns>
+        public Task<DateTime> GetFileLastModified(string path)
+        {
+            try
+            {
+                string localPath = GetLocalPath(path);
+                return Task.FromResult(new FileInfo(localPath).LastWriteTime);
+            }
+            catch (Exception ex)
+            {
+                if (ex is ArgumentException ||
+                    ex is ArgumentNullException ||
+                    ex is PathTooLongException ||
+                    ex is UnauthorizedAccessException ||
+                    ex is SecurityException ||
+                    ex is DirectoryNotFoundException)
+                    throw new FileNoAccessException(ex.Message, ex);
+                else
+                    throw new FileBusyException(ex.Message, ex);
+            }
+        }
+
         /// <exception cref="ArgumentException">
         /// By <see cref="Path.Combine(string, string)"/>: path1 or path2 contains one or more of the invalid characters defined in System.IO.Path.GetInvalidPathChars.
         /// By <see cref="Path.GetFullPath(string)"/>: path is a zero-length string, contains only white space, or contains one or more

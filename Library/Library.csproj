@@ -10,7 +10,7 @@
     <Company>Zhaobang China</Company>
     <PackageProjectUrl>https://github.com/taoyouh/FtpServer/tree/master/Library</PackageProjectUrl>
     <Copyright>Copyright (c) Zhaoquan Huang. All rights reserved</Copyright>
-    <Version>2.1.5.4</Version>
+    <Version>2.1.5.6</Version>
     <RootNamespace>Zhaobang.FtpServer</RootNamespace>
     <AssemblyName>Zhaobang.FtpServer</AssemblyName>
     <PackageLicenseUrl></PackageLicenseUrl>

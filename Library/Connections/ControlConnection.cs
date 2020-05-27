@@ -141,6 +141,7 @@ namespace Zhaobang.FtpServer.Connections
             LocalError = 451,
             PathCreated = 257,
             TransferStarting = 125,
+            FileStatus = 213,
             SuccessClosingDataConnection = 226,
             FileActionOk = 250,
             FileBusy = 450,
@@ -359,6 +360,14 @@ namespace Zhaobang.FtpServer.Connections
                     return;
                 case "STOR":
                     await CommandStorAsync(parameter);
+                    return;
+                case "SIZE":
+                    await ReplyAsync(FtpReplyCode.FileStatus, fileProvider.GetFileSize(parameter).ToString());
+                    return;
+                case "MDTM":
+                    var modifiedDate = await fileProvider.GetFileLastModified(parameter);
+                    var result = modifiedDate.ToString(modifiedDate.Year == DateTime.Now.Year ? "MMM dd HH:mm" : "MMM dd  yyyy", CultureInfo.InvariantCulture);
+                    await ReplyAsync(FtpReplyCode.FileStatus, result);
                     return;
                 case "CWD":
                     if (!authenticated)

@@ -2,6 +2,7 @@
 // Copyright (c) Zhaoquan Huang. All rights reserved
 // </copyright>
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -100,5 +101,19 @@ namespace Zhaobang.FtpServer.File
         /// <exception cref="FileBusyException">The operation failed but worth a retry.</exception>
         /// <exception cref="FileNoAccessException">The listing can't be obtained.</exception>
         Task<IEnumerable<FileSystemEntry>> GetListingAsync(string path);
+
+        /// <summary>
+        /// Gets the size of the file.
+        /// </summary>
+        /// <param name="path">Absolute or relative FTP path of the file.</param>
+        /// <returns>The files size.</returns>
+        Task<long> GetFileSize(string path);
+
+        /// <summary>
+        /// Gets the last modified date of the file.
+        /// </summary>
+        /// <param name="path">Absolute or relative FTP path of the file.</param>
+        /// <returns>The files modification date.</returns>
+        Task<DateTime> GetFileLastModified(string path);
     }
 }
