@@ -362,7 +362,7 @@ namespace Zhaobang.FtpServer.Connections
                     await CommandStorAsync(parameter);
                     return;
                 case "SIZE":
-                    await ReplyAsync(FtpReplyCode.FileStatus, fileProvider.GetFileSize(parameter).ToString());
+                    await ReplyAsync(FtpReplyCode.FileStatus, (await fileProvider.GetFileSize(parameter)).ToString());
                     return;
                 case "MDTM":
                     var modifiedDate = await fileProvider.GetFileLastModified(parameter);
