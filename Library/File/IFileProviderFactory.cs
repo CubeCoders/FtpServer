@@ -2,6 +2,8 @@
 // Copyright (c) Zhaoquan Huang. All rights reserved
 // </copyright>
 
+using System;
+
 namespace Zhaobang.FtpServer.File
 {
     /// <summary>
@@ -13,7 +15,8 @@ namespace Zhaobang.FtpServer.File
         /// Creates <see cref="IFileProvider"/> for specified user.
         /// </summary>
         /// <param name="user">The name of the user.</param>
+        /// <param name="sessionId">The id of the current session.</param>
         /// <returns>The <see cref="IFileProvider"/>.</returns>
-        IFileProvider GetProvider(string user);
+        IFileProvider GetProvider(string user, Guid sessionId);
     }
 }

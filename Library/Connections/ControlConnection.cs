@@ -45,6 +45,7 @@ namespace Zhaobang.FtpServer.Connections
 
         private Encoding encoding = Encoding.UTF8;
         private string userName = string.Empty;
+        private Guid sessionId = Guid.Empty;
         private bool authenticated;
 
         private int readOffset = 0;
@@ -297,10 +298,10 @@ namespace Zhaobang.FtpServer.Connections
                     await ReplyAsync(FtpReplyCode.NeedPassword, "Please input password");
                     return;
                 case "PASS":
-                    if (authenticated = server.Authenticator.Authenticate(userName, parameter, remoteEndPoint))
+                    if (authenticated = server.Authenticator.Authenticate(userName, parameter, remoteEndPoint, out sessionId))
                     {
                         await ReplyAsync(FtpReplyCode.UserLoggedIn, "Logged in");
-                        fileProvider = server.FileManager.GetProvider(userName);
+                        fileProvider = server.FileManager.GetProvider(userName, sessionId);
                     }
                     else
                     {
