@@ -2,6 +2,7 @@
 // Copyright (c) Zhaoquan Huang. All rights reserved
 // </copyright>
 
+using System;
 using System.IO;
 
 namespace Zhaobang.FtpServer.File
@@ -32,7 +33,8 @@ namespace Zhaobang.FtpServer.File
         /// Gets provider for the specified user.
         /// </summary>
         /// <param name="user">The name of the user.</param>
+        /// <param name="sessionId">The id of the current session.</param>
         /// <returns>The <see cref="SimpleFileProvider"/> for that user.</returns>
-        public IFileProvider GetProvider(string user) => new SimpleFileProvider(baseDirectory);
+        public IFileProvider GetProvider(string user, Guid sessionId) => new SimpleFileProvider(baseDirectory);
     }
 }

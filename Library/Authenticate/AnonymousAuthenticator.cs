@@ -2,6 +2,7 @@
 // Copyright (c) Zhaoquan Huang. All rights reserved
 // </copyright>
 
+using System;
 using System.Net;
 
 namespace Zhaobang.FtpServer.Authenticate
@@ -18,6 +19,10 @@ namespace Zhaobang.FtpServer.Authenticate
         /// <param name="password">The password user inputted.</param>
         /// <param name="remoteEndPoint">The remote endpoint the user connected from.</param>
         /// <returns>Whether the user name is "anonymous".</returns>
-        public bool Authenticate(string userName, string password, IPEndPoint remoteEndPoint) => userName.ToUpper() == "ANONYMOUS";
+        public bool Authenticate(string userName, string password, IPEndPoint remoteEndPoint, out Guid Id)
+        {
+            Id = Guid.Empty;
+            return userName.ToUpper() == "ANONYMOUS";
+        }
     }
 }
